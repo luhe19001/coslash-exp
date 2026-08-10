@@ -14,39 +14,48 @@ This record is the task's pickup lock and current truth. The master changes `rea
 
 ```yaml
 task_id: "16"
-state: untouched # untouched | claimed | in_progress | blocked | review | changes_requested | complete | deferred
-readiness: blocked # blocked | ready
-status_reason: "Waiting for Tasks 07 and 14; final integration also requires Task 15."
+state: complete # untouched | claimed | in_progress | blocked | review | changes_requested | complete | deferred
+readiness: ready # blocked | ready
+status_reason: "Merged into hlu/canvas-migration as cd3110e; green post-merge on the frontend suite and the full collector canvas suite."
 pickup_condition: "Tasks 07 and 14 are complete; Task 15 may still be active only if frozen controller fixtures are available."
 agent:
-  id: null
-  runtime: null
-  claimed_at_utc: null
-  started_at_utc: null
-  completed_at_utc: null
-branch: null
-worktree: null
-base_sha: null
-result_sha: null
+  id: claude-worker-task-16
+  runtime: claude-code
+  claimed_at_utc: "2026-08-09T17:07:16Z"
+  started_at_utc: "2026-08-09T17:10:00Z"
+  completed_at_utc: "2026-08-09T18:03:49Z"
+branch: claude/canvas-task-16-atlas-frontend
+worktree: /Users/helu/code/product/coslash-task-16
+base_sha: 69e58b272589dabaaeb31eeadc3611bbcc5f4bfa
+result_sha: 88754fc33486730b65e3dcfb7c583c86dc017f35
 dependencies:
   required: ["07", "14", "15"]
-  satisfied: []
-blockers: ["07", "14", "15"]
-current_focus: null
-next_action: "Wait for the master to mark the pickup condition satisfied."
-last_updated_at_utc: "2026-08-08T18:44:11Z"
-last_updated_by: planning-agent
+  satisfied: ["07", "14", "15"]
+blockers: []
+current_focus: "Merged"
+next_action: "Task 17 is the last unbuilt dependency; Task 18's Atlas rows are now runnable."
+last_updated_at_utc: "2026-08-09T18:03:49Z"
+last_updated_by: claude-worker-task-16
 verification:
-  state: not_run # not_run | running | passed | failed | partial
-  commands: []
+  state: passed # not_run | running | passed | failed | partial
+  commands:
+    - "cd frontend && npx vitest run src/plugins/canvas/atlas # 142 Atlas tests"
+    - "cd frontend && npx tsc -b --force && npm test && npm run lint && npx prettier --check src/plugins/canvas && npm run build # 27 files / 352 tests, build green"
+    - "cd collector && go build ./... && go test ./internal/plugins/canvas/... # post-merge, all canvas packages pass"
 review:
-  reviewer: null
-  reviewed_at_utc: null
-  outcome: null # approved | changes_requested | rejected
+  reviewer: human operator
+  reviewed_at_utc: "2026-08-09T18:03:49Z"
+  outcome: approved # approved | changes_requested | rejected
 post_implementation:
-  remaining_work: []
-  improvements: []
-  known_issues: []
+  remaining_work:
+    - "The Atlas destination is not registered with the plugin shell; lazy registration and destination readiness are Task 19 work, and an incomplete destination must stay hidden until then. DaGama is in the same state."
+    - "Only the plan → build → review starter chain is runnable. A board can be drawn that the controller cannot execute; the editor names the reason rather than hiding Run, but the custom-graph runtime is not in scope here."
+    - "No visual or browser matrix. Rendering is asserted through renderToStaticMarkup, which is what this repo supports — there is no jsdom and no RTL, so pointer drag, resize, and scroll are covered by the shared layer's unit tests rather than end to end."
+  improvements:
+    - "The DaGama and Atlas dialogs are now near-identical apart from their board type; a shared Canvas dialog module would remove the second place to get the save-then-start ordering wrong."
+    - "The Atlas terminal module is a chokepoint re-exporting the Session Canvas transport, which is product-agnostic and belongs in the shared Canvas layer. Moving it is a shared-file change outside this task's ownership."
+  known_issues:
+    - "Attach is guarded against duplicate sockets by an in-flight set held in a ref. Correct for a single mounted board, which is the only way the destination is used, but it is not a lock."
   follow_up_tasks: []
 ```
 

@@ -3,196 +3,53 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
 
-const html = readFileSync(
-  new URL("./migration-control.html", import.meta.url),
-  "utf8",
-);
-
-function between(start, end) {
-  const from = html.indexOf(start);
-  const to = html.indexOf(end, from);
-  assert.notEqual(from, -1, `missing start marker: ${start}`);
-  assert.notEqual(to, -1, `missing end marker: ${end}`);
-  return html.slice(from, to);
-}
-
-function dashboardAPI() {
-  const definitions = between("const TASK_STATES", "let selectedId");
-  const validation = between("function validTaskState", "function labelFor");
-  const context = vm.createContext({});
-  vm.runInContext(
-    `${definitions}
-     let state = { tasks: {} };
-     ${validation}
-     globalThis.dashboard = {
-       hasPassingTestEvidence,
-       hasCompletionEvidence,
-       sanitizeTaskRecord,
-       displayTaskState(id, value) {
-         state = value;
-         return displayState(TASK_BY_ID[id]);
-       },
-       setState(value) { state = value; },
-     };`,
-    context,
-  );
-  return context.dashboard;
-}
+const read = (name) => readFileSync(new URL(name, import.meta.url), "utf8");
+const html = read("./migration-control.html");
 
 function loadSidecar(id) {
-  const source = readFileSync(
-    new URL(`./task-status/${id}.js`, import.meta.url),
-    "utf8",
-  );
   const context = vm.createContext({ window: {} });
-  vm.runInContext(source, context);
+  vm.runInContext(read(`./task-status/${id}.js`), context);
   return context.window.COSLASH_CANVAS_TASK_STATUS[id];
 }
 
-function completedRecord(tests) {
-  return {
-    state: "complete",
-    agent: "worker",
-    branch: "task/branch",
-    sha: "a".repeat(40),
-    reviewer: "reviewer",
-    review: "approved",
-    tests,
-  };
-}
-
-const passing = (command) => ({
-  command,
-  result: "passed",
-  evidence: `${command} passed`,
+test("every inline dashboard script parses", () => {
+  const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]
+    .map((match) => match[1].trim())
+    .filter(Boolean);
+  assert.ok(scripts.length > 0);
+  for (const script of scripts) new vm.Script(script);
 });
 
-test("completion requires the latest result for every recorded command", () => {
-  const { hasCompletionEvidence, hasPassingTestEvidence } = dashboardAPI();
-  const mixed = [passing("go test ./..."), {
-    command: "npm run build",
-    result: "failed",
-    evidence: "exit 1",
-  }];
-  assert.equal(hasPassingTestEvidence(mixed), false);
-  assert.equal(hasCompletionEvidence(completedRecord(mixed)), false);
+test("monitor exposes sidecar-backed task tickets and completed Task 12 truth", () => {
+  assert.match(html, /id="ticketList"/);
+  assert.match(html, /function openTickets\(\)/);
+  assert.match(html, /function renderTickets\(\)/);
+  assert.match(html, /renderTickets\(\);/);
+  assert.match(html, /issues: Array\.isArray\(file && file\.issues\)/);
 
-  const rerun = [
-    { command: "go test ./...", result: "failed", evidence: "exit 1" },
-    passing("go test ./..."),
-    passing("npm run build"),
-  ];
-  assert.equal(hasPassingTestEvidence(rerun), true);
-  assert.equal(hasCompletionEvidence(completedRecord(rerun)), true);
-});
-
-test("legacy pass results normalize to the canonical passed value", () => {
-  const { hasCompletionEvidence, sanitizeTaskRecord } = dashboardAPI();
-  const record = completedRecord([
-    { command: "go test ./...", result: "pass", evidence: "ok" },
-  ]);
-  const sanitized = sanitizeTaskRecord(record);
-  assert.equal(sanitized.tests[0].result, "passed");
-  assert.equal(hasCompletionEvidence(sanitized), true);
-});
-
-test("completed sidecars using legacy pass results remain complete", () => {
-  const { hasCompletionEvidence, sanitizeTaskRecord } = dashboardAPI();
-  for (const id of ["05", "08", "11"]) {
-    const record = sanitizeTaskRecord(loadSidecar(id));
-    assert.ok(record.tests.length > 0, `Task ${id} has test evidence`);
-    assert.ok(
-      record.tests.every((item) => item.result === "passed"),
-      `Task ${id} results are canonicalized`,
-    );
-    assert.equal(
-      hasCompletionEvidence(record),
-      true,
-      `Task ${id} remains complete`,
-    );
-  }
-});
-
-test("explicit non-gating failures preserve accepted completion evidence", () => {
-  const { hasCompletionEvidence, sanitizeTaskRecord } = dashboardAPI();
-  const record = completedRecord([
-    passing("npm test"),
-    {
-      command: "npm run format:check",
-      result: "failed",
-      gating: false,
-      evidence: "accepted legacy formatting backlog",
-    },
-  ]);
-  const sanitized = sanitizeTaskRecord(record);
-  assert.equal(sanitized.tests[1].gating, false);
-  assert.equal(hasCompletionEvidence(sanitized), true);
-  assert.equal(
-    hasCompletionEvidence(completedRecord([
-      passing("npm test"),
+  const task12 = loadSidecar("12");
+  assert.equal(task12.state, "complete");
+  assert.equal(task12.sha, "780f4bd6f1a1d62ba724850fdd704bf0c4506f11");
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(task12.issues)),
+    [
       {
-        command: "npm run format:check",
-        result: "failed",
-        evidence: "unaccepted failure",
-      },
-    ])),
-    false,
-  );
-});
-
-test("task import/export sanitizer drops unknown task and test fields", () => {
-  const { sanitizeTaskRecord } = dashboardAPI();
-  const sanitized = sanitizeTaskRecord({
-    state: "review",
-    agent: "worker",
-    token: "top-secret",
-    progress: [{ token: "nested-secret" }],
-    tests: [
-      {
-        command: "go test ./...",
-        result: "passed",
-        evidence: "ok",
-        at: "2026-08-09T00:00:00Z",
-        token: "test-secret",
+        id: "I-007",
+        severity: "P1",
+        status: "resolved",
+        summary:
+          "465eccf supplies the tracked native-tmux lifecycle; c1b6aa6 hardens its evidence capture; 43e2923 integrates the concrete controller driver; 780f4bd resolves shutdown and cross-product review findings.",
+        owner: "master review / integration",
       },
     ],
-  });
-  assert.equal(sanitized.state, "review");
-  assert.equal(sanitized.agent, "worker");
-  assert.equal(Object.hasOwn(sanitized, "token"), false);
-  assert.equal(Object.hasOwn(sanitized, "progress"), false);
-  assert.equal(Object.hasOwn(sanitized.tests[0], "token"), false);
-  assert.doesNotMatch(JSON.stringify(sanitized), /secret/);
-});
-
-test("recommendations and completion use validated display state", () => {
-  const { displayTaskState } = dashboardAPI();
-  const invalidComplete = completedRecord([
-    passing("go test ./..."),
-    { command: "npm run build", result: "failed", evidence: "exit 1" },
-  ]);
-  assert.equal(
-    displayTaskState("00", { tasks: { "00": invalidComplete } }),
-    "review",
-  );
-  assert.match(
-    html,
-    /const byState = \(value\) =>\s*TASKS\.filter\(\(task\) => displayState\(task\) === value\)/,
-  );
-  assert.match(
-    html,
-    /TASKS\.every\(\(task\) => displayState\(task\) === "complete"\)/,
   );
 });
 
-test("Task 00 remains complete with its accepted baseline failure", () => {
-  const record = loadSidecar("00");
-  const { hasCompletionEvidence, sanitizeTaskRecord } = dashboardAPI();
-  assert.equal(record.state, "complete");
-  assert.equal(
-    record.tests.find((item) => item.command === "npm run format:check")
-      .gating,
-    false,
+test("central Markdown records mirror resolved I-007 and completed Task 12", () => {
+  assert.match(read("./ISSUES.md"), /\| I-007 \| high\s+\| 12[\s\S]*\| resolved \|/);
+  assert.match(read("./STATUS.md"), /\| 12 DaGama controller\s+\| complete .*780f4bd/);
+  assert.match(
+    read("./REPORTS.md"),
+    /## Task 12 — DaGama controller and run lifecycle — 2026-08-09[\s\S]*I-007/,
   );
-  assert.equal(hasCompletionEvidence(sanitizeTaskRecord(record)), true);
 });

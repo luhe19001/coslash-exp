@@ -2,7 +2,7 @@
 
 This directory is the coordination package for migrating Session Canvas, DaGama Canvas, and Atlas Canvas from Fleetlog commit `c13a3ef01438193dcdcd2e387300e69ae3c27437` into a branch based on the latest `centauri-ai/coslash/main`.
 
-This directory is the canonical live coordination package on the coSlash integration branch `hlu/canvas-migration`. Agents use this copy for task claims, status feeds, progress reports, and dashboard monitoring.
+The package currently lives in the legacy source repository because no standalone coSlash checkout was available when it was created. Before implementation, the master agent must copy this directory unchanged into `docs/plans/canvas-suite/` on the coSlash integration branch `hlu/canvas-migration`.
 
 ## Read first
 
@@ -29,7 +29,7 @@ Live task state is automatic: each assigned agent exclusively updates `task-stat
 
 ```text
 Wave 0:  00 reference baseline  ||  01 plugin contracts
-Wave 1:  02 core registration → 04 terminal   ||  03 runfs  ||  06 detail  ||  07 UI shell
+Wave 1:  02 core registration   ||  03 runfs  ||  04 terminal  ||  06 detail  ||  07 UI shell
 Wave 2:  05 git/artifacts       ||  08 persistence
 Wave 3:  09/10 Session Canvas   ||  11 DaGama model  ||  14 Atlas model
 Wave 4:  12/13 DaGama           ||  15/16 Atlas      ||  17 legacy import

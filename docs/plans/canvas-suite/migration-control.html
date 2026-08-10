@@ -421,6 +421,58 @@
         color: var(--muted);
       }
 
+      .ticket-section {
+        margin-top: 12px;
+        padding-top: 11px;
+        border-top: 1px solid var(--line);
+      }
+
+      .ticket-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .ticket-list {
+        display: grid;
+        gap: 7px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .ticket-list button {
+        width: 100%;
+        padding: 8px;
+        text-align: left;
+        background: var(--panel-2);
+      }
+
+      .ticket-labels {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        margin-bottom: 3px;
+        color: var(--blocked);
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .ticket-summary,
+      .ticket-owner {
+        display: block;
+      }
+
+      .ticket-owner,
+      .ticket-empty {
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
       .toast {
         position: fixed;
         right: 16px;
@@ -604,11 +656,8 @@
                 </select>
               </label>
               <label>
-                Result / merge SHA
-                <input
-                  id="shaInput"
-                  placeholder="full 40-character commit SHA"
-                />
+                Result SHA
+                <input id="shaInput" placeholder="commit SHA" />
               </label>
               <label class="wide">
                 Status reason / current focus
@@ -643,6 +692,13 @@
           </div>
           <ol id="recommendationList"></ol>
           <div class="capacity" id="capacity"></div>
+          <section class="ticket-section" aria-labelledby="ticketTitle">
+            <div class="ticket-head">
+              <h2 id="ticketTitle">Open task tickets</h2>
+              <a href="ISSUES.md" target="_blank">Full register ↗</a>
+            </div>
+            <ul class="ticket-list" id="ticketList"></ul>
+          </section>
         </aside>
       </div>
     </div>
@@ -659,8 +715,8 @@ You are one worker coding agent for the coSlash Canvas migration. Automatically 
 
 AUTHORITATIVE LOCATIONS
 
-- Plan root: /Users/helu/code/product/coslash/docs/plans/canvas-suite
-- Human dashboard: file:///Users/helu/code/product/coslash/docs/plans/canvas-suite/migration-control.html#01
+- Plan root: /Users/helu/code/product/fleetlog-canvas/docs/plans/canvas-suite
+- Human dashboard: file:///Users/helu/code/product/fleetlog-canvas/docs/plans/canvas-suite/migration-control.html#01
 - Legacy/reference repository: /Users/helu/code/product/fleetlog-canvas
 - Target remote: https://github.com/centauri-ai/coslash
 - Required integration branch: hlu/canvas-migration, based on current coSlash main
@@ -770,29 +826,6 @@ EXECUTION RULES
         "use strict";
 
         const STORAGE_KEY = "coslash-canvas-migration-control-v1";
-        const TASK_STATES = new Set([
-          "untouched",
-          "claimed",
-          "in_progress",
-          "blocked",
-          "review",
-          "changes_requested",
-          "complete",
-          "deferred",
-        ]);
-        const REVIEW_STATES = new Set([
-          "pending",
-          "approved",
-          "changes_requested",
-        ]);
-        const TEST_RESULTS = new Set([
-          "passed",
-          "failed",
-          "partial",
-          "not_run",
-        ]);
-        const normalizeTestResult = (value) =>
-          value === "pass" ? "passed" : TEST_RESULTS.has(value) ? value : "";
         const TASKS = [
           {
             id: "00",
@@ -838,7 +871,7 @@ EXECUTION RULES
             id: "04",
             title: "Agent + terminal",
             wave: 1,
-            start: ["01", "02"],
+            start: ["01"],
             integrate: [],
             owner: "worker",
             area: "backend runtime",
@@ -1003,8 +1036,6 @@ EXECUTION RULES
           state: "untouched",
           agent: "",
           branch: "",
-          worktree: "",
-          baseSha: "",
           reviewer: "",
           review: "pending",
           sha: "",
@@ -1014,62 +1045,8 @@ EXECUTION RULES
           startedAt: "",
           completedAt: "",
           updatedAt: "",
-          tests: [],
+          issues: [],
         });
-        const TASK_TEXT_FIELDS = [
-          "agent",
-          "branch",
-          "worktree",
-          "baseSha",
-          "reviewer",
-          "sha",
-          "reason",
-          "notes",
-          "claimedAt",
-          "startedAt",
-          "completedAt",
-          "updatedAt",
-        ];
-        const TEST_TEXT_FIELDS = ["command", "evidence", "at"];
-
-        function sanitizeTests(value) {
-          if (!Array.isArray(value)) return [];
-          return value
-            .filter(
-              (test) =>
-                test && typeof test === "object" && !Array.isArray(test),
-            )
-            .map((test) => {
-              const clean = Object.fromEntries(
-                TEST_TEXT_FIELDS.map((field) => [
-                  field,
-                  typeof test[field] === "string" ? test[field] : "",
-                ]),
-              );
-              clean.result = normalizeTestResult(test.result);
-              if (typeof test.gating === "boolean")
-                clean.gating = test.gating;
-              return clean;
-            });
-        }
-
-        function sanitizeTaskRecord(value) {
-          const clean = emptyRecord();
-          if (!value || typeof value !== "object" || Array.isArray(value))
-            return clean;
-          clean.state = TASK_STATES.has(value.state)
-            ? value.state
-            : clean.state;
-          clean.review = REVIEW_STATES.has(value.review)
-            ? value.review
-            : clean.review;
-          TASK_TEXT_FIELDS.forEach((field) => {
-            clean[field] =
-              typeof value[field] === "string" ? value[field] : "";
-          });
-          clean.tests = sanitizeTests(value.tests);
-          return clean;
-        }
 
         let selectedId = location.hash.slice(1);
         if (!TASK_BY_ID[selectedId]) selectedId = "00";
@@ -1096,6 +1073,7 @@ EXECUTION RULES
           timeLine: document.getElementById("timeLine"),
           recommendationList: document.getElementById("recommendationList"),
           capacity: document.getElementById("capacity"),
+          ticketList: document.getElementById("ticketList"),
           updatedAt: document.getElementById("updatedAt"),
           copyReportButton: document.getElementById("copyReportButton"),
           promptButton: document.getElementById("promptButton"),
@@ -1124,15 +1102,11 @@ EXECUTION RULES
             saved = null;
           }
           for (const id of Object.keys(base)) {
-            const localRecord =
+            const local =
               saved && saved.version === 1 && saved.tasks
                 ? saved.tasks[id]
                 : null;
-            const fileRecord = sidecars[id] || null;
-            const local = localRecord
-              ? sanitizeTaskRecord(localRecord)
-              : null;
-            const file = fileRecord ? sanitizeTaskRecord(fileRecord) : null;
+            const file = sidecars[id] || null;
             const localTime = Date.parse(local && local.updatedAt) || 0;
             const fileTime = Date.parse(file && file.updatedAt) || 0;
             const fileWins = Boolean(file) && fileTime >= localTime;
@@ -1140,6 +1114,11 @@ EXECUTION RULES
               ...base[id],
               ...(fileWins ? local : file),
               ...(fileWins ? file : local),
+              issues: Array.isArray(file && file.issues)
+                ? file.issues
+                : Array.isArray(local && local.issues)
+                  ? local.issues
+                  : [],
               _source: fileWins
                 ? "agent file"
                 : local
@@ -1167,89 +1146,33 @@ EXECUTION RULES
           }
         }
 
-        function validTaskState(value) {
-          return TASK_STATES.has(value) ? value : "untouched";
-        }
-
-        function hasPassingTestEvidence(tests) {
-          if (!Array.isArray(tests) || tests.length === 0) return false;
-          const latestByCommand = new Map();
-          for (const test of tests) {
-            if (
-              !test ||
-              typeof test !== "object" ||
-              Array.isArray(test) ||
-              typeof test.command !== "string" ||
-              !test.command.trim() ||
-              !normalizeTestResult(test.result)
-            )
-              return false;
-            latestByCommand.set(test.command.trim(), {
-              ...test,
-              result: normalizeTestResult(test.result),
-            });
-          }
-          return (
-            latestByCommand.size > 0 &&
-            [...latestByCommand.values()].every(
-              (test) =>
-                (test.gating === false || test.result === "passed") &&
-                typeof test.evidence === "string" &&
-                test.evidence.trim(),
-            )
-          );
-        }
-
-        function hasCompletionEvidence(record) {
-          return (
-            validTaskState(record.state) === "complete" &&
-            typeof record.agent === "string" &&
-            record.agent.trim() &&
-            typeof record.branch === "string" &&
-            record.branch.trim() &&
-            typeof record.sha === "string" &&
-            /^[0-9a-f]{40}$/i.test(record.sha.trim()) &&
-            typeof record.reviewer === "string" &&
-            record.reviewer.trim() &&
-            record.review === "approved" &&
-            hasPassingTestEvidence(record.tests)
-          );
-        }
-
         function dependenciesComplete(ids) {
-          return ids.every((id) => hasCompletionEvidence(state.tasks[id]));
+          return ids.every((id) => state.tasks[id].state === "complete");
         }
 
         function displayState(task) {
-          const value = validTaskState(state.tasks[task.id].state);
-          if (
-            value === "complete" &&
-            !hasCompletionEvidence(state.tasks[task.id])
-          )
-            return "review";
+          const value = state.tasks[task.id].state;
           if (value !== "untouched") return value;
           return dependenciesComplete(task.start) ? "ready" : "waiting";
         }
 
         function labelFor(value) {
-          return (
-            {
-              untouched: "Untouched",
-              ready: "Ready",
-              waiting: "Waiting",
-              claimed: "Claimed",
-              in_progress: "In progress",
-              blocked: "Blocked",
-              review: "Review",
-              changes_requested: "Changes",
-              complete: "Complete",
-              deferred: "Deferred",
-            }[value] || "Untouched"
-          );
+          return {
+            untouched: "Untouched",
+            ready: "Ready",
+            waiting: "Waiting",
+            claimed: "Claimed",
+            in_progress: "In progress",
+            blocked: "Blocked",
+            review: "Review",
+            changes_requested: "Changes",
+            complete: "Complete",
+            deferred: "Deferred",
+          }[value];
         }
 
         function missing(ids) {
-          return ids.filter((id) => !hasCompletionEvidence(state.tasks[id]));
+          return ids.filter((id) => state.tasks[id].state !== "complete");
         }
 
         function render() {
@@ -1257,6 +1180,7 @@ EXECUTION RULES
           renderSummary();
           renderTask();
           renderRecommendations();
+          renderTickets();
         }
 
         function renderWaves() {
@@ -1275,7 +1199,10 @@ EXECUTION RULES
               const button = document.createElement("button");
               button.type = "button";
               button.className = `node${task.id === selectedId ? " selected" : ""}`;
-              button.title = `Task ${task.id} · ${labelFor(current)} · starts after ${task.start.join(", ") || "none"}`;
+              const ticketCount = openTickets().filter(
+                (ticket) => ticket.task.id === task.id,
+              ).length;
+              button.title = `Task ${task.id} · ${labelFor(current)} · starts after ${task.start.join(", ") || "none"}${ticketCount ? ` · ${ticketCount} open ticket${ticketCount === 1 ? "" : "s"}` : ""}`;
               button.innerHTML = `<span class="task-id">${task.id}</span><span class="task-title"></span><span class="dot ${current}" aria-label="${labelFor(current)}"></span>`;
               button.querySelector(".task-title").textContent = task.title;
               button.addEventListener("click", () => selectTask(task.id));
@@ -1300,6 +1227,7 @@ EXECUTION RULES
             ["Review", value("review")],
             ["Blocked", value("blocked")],
             ["Waiting", value("waiting")],
+            ["Tickets", openTickets().length],
             ["Done", `${done}/${TASKS.length}`],
           ];
           elements.counts.innerHTML = summary
@@ -1319,14 +1247,7 @@ EXECUTION RULES
           const integrationMissing = missing(task.integrate);
 
           elements.taskHeading.textContent = `Task ${task.id} — ${task.title}`;
-          const statusLabel = document.createElement("span");
-          statusLabel.className = `status-label ${current}`;
-          statusLabel.textContent = labelFor(current);
-          const statusMeta = document.createElement("span");
-          statusMeta.className = "meta";
-          statusMeta.textContent =
-            record.reason || readinessReason(task, current);
-          elements.statusLine.replaceChildren(statusLabel, statusMeta);
+          elements.statusLine.innerHTML = `<span class="status-label ${current}">${labelFor(current)}</span><span class="meta">${record.reason || readinessReason(task, current)}</span>`;
           elements.briefLink.href = task.brief;
           elements.taskFacts.innerHTML = [
             ["Owner", task.owner],
@@ -1336,6 +1257,11 @@ EXECUTION RULES
             ["Integration blockers", integrationMissing.join(", ") || "none"],
             ["Started", shortTime(record.startedAt)],
             ["Completed", shortTime(record.completedAt)],
+            [
+              "Open tickets",
+              openTickets().filter((ticket) => ticket.task.id === task.id)
+                .length,
+            ],
           ]
             .map(
               ([name, value]) =>
@@ -1343,7 +1269,7 @@ EXECUTION RULES
             )
             .join("");
 
-          elements.stateInput.value = validTaskState(record.state);
+          elements.stateInput.value = record.state;
           elements.agentInput.value = record.agent;
           elements.branchInput.value = record.branch;
           elements.reviewerInput.value = record.reviewer;
@@ -1373,7 +1299,7 @@ EXECUTION RULES
           const recommendations = [];
           const add = (task, text) => recommendations.push({ task, text });
           const byState = (value) =>
-            TASKS.filter((task) => displayState(task) === value);
+            TASKS.filter((task) => state.tasks[task.id].state === value);
 
           byState("review").forEach((task) =>
             add(
@@ -1423,7 +1349,7 @@ EXECUTION RULES
 
           if (
             !recommendations.length &&
-            TASKS.every((task) => displayState(task) === "complete")
+            TASKS.every((task) => state.tasks[task.id].state === "complete")
           ) {
             recommendations.push({
               task: TASK_BY_ID["19"],
@@ -1460,22 +1386,75 @@ EXECUTION RULES
           elements.capacity.textContent = `Worker capacity: ${activeWorkers.length}/3 · Master tasks active: ${masterActive} · Only “complete” unlocks dependencies.`;
         }
 
-        function selectTask(id) {
-          if (!TASK_BY_ID[id] || id === selectedId) return true;
-          if (
-            formDirty &&
-            !confirm(
-              `Discard unsaved changes for Task ${selectedId} and open Task ${id}?`,
-            )
-          ) {
-            history.replaceState(null, "", `#${selectedId}`);
-            return false;
+        function openTickets() {
+          const closed = new Set(["closed", "resolved", "controlled"]);
+          return TASKS.flatMap((task) => {
+            const issues = Array.isArray(state.tasks[task.id].issues)
+              ? state.tasks[task.id].issues
+              : [];
+            return issues
+              .filter(
+                (issue) =>
+                  issue &&
+                  issue.id &&
+                  !closed.has(String(issue.status || "open").toLowerCase()),
+              )
+              .map((issue) => ({ task, issue }));
+          });
+        }
+
+        function renderTickets() {
+          const rank = {
+            critical: 0,
+            p0: 0,
+            high: 1,
+            p1: 1,
+            medium: 2,
+            p2: 2,
+            low: 3,
+            p3: 3,
+          };
+          const tickets = openTickets().sort((left, right) => {
+            const leftRank =
+              rank[String(left.issue.severity || "").toLowerCase()] ?? 9;
+            const rightRank =
+              rank[String(right.issue.severity || "").toLowerCase()] ?? 9;
+            return (
+              leftRank - rightRank || left.issue.id.localeCompare(right.issue.id)
+            );
+          });
+          elements.ticketList.replaceChildren();
+          if (!tickets.length) {
+            const empty = document.createElement("li");
+            empty.className = "ticket-empty";
+            empty.textContent = "No open task tickets.";
+            elements.ticketList.append(empty);
+            return;
           }
-          formDirty = false;
+          for (const { task, issue } of tickets) {
+            const item = document.createElement("li");
+            const button = document.createElement("button");
+            button.type = "button";
+            const labels = document.createElement("span");
+            labels.className = "ticket-labels";
+            labels.textContent = `${issue.id} · ${issue.severity || "unrated"} · Task ${task.id}`;
+            const summary = document.createElement("span");
+            summary.className = "ticket-summary";
+            summary.textContent = issue.summary || "Issue summary missing";
+            const owner = document.createElement("span");
+            owner.className = "ticket-owner";
+            owner.textContent = `Owner: ${issue.owner || "unassigned"} · ${issue.status || "open"}`;
+            button.append(labels, summary, owner);
+            button.addEventListener("click", () => selectTask(task.id));
+            item.append(button);
+            elements.ticketList.append(item);
+          }
+        }
+
+        function selectTask(id) {
           selectedId = id;
           history.replaceState(null, "", `#${id}`);
           render();
-          return true;
         }
 
         function updateSelected(event) {
@@ -1484,11 +1463,9 @@ EXECUTION RULES
           const record = state.tasks[selectedId];
           const nextState = elements.stateInput.value;
           const agent = elements.agentInput.value.trim();
-          const branch = elements.branchInput.value.trim();
           const reviewer = elements.reviewerInput.value.trim();
           const reason = elements.reasonInput.value.trim();
           const review = elements.reviewInput.value;
-          const sha = elements.shaInput.value.trim();
           const assignedStates = [
             "claimed",
             "in_progress",
@@ -1506,20 +1483,14 @@ EXECUTION RULES
             return showToast(
               "Completion requires a human reviewer and Approved outcome.",
             );
-          if (nextState === "complete" && !branch)
-            return showToast("Completion requires the reviewed branch.");
-          if (nextState === "complete" && !/^[0-9a-f]{40}$/i.test(sha))
-            return showToast(
-              "Completion requires the full 40-character merged/result SHA.",
-            );
-          if (nextState === "complete" && !hasPassingTestEvidence(record.tests))
-            return showToast(
-              "Completion requires passing command and evidence records from the task sidecar.",
-            );
-          if (nextState === "complete" && missing(task.start).length)
-            return showToast(
-              `Completion requires merged dependencies ${missing(task.start).join(", ")}.`,
-            );
+          if (
+            nextState === "complete" &&
+            missing(task.start).length &&
+            !confirm(
+              `Start dependencies ${missing(task.start).join(", ")} are not complete. Record this task complete anyway?`,
+            )
+          )
+            return;
 
           const now = new Date().toISOString();
           if (assignedStates.includes(nextState) && !record.claimedAt)
@@ -1542,10 +1513,10 @@ EXECUTION RULES
           record.state =
             review === "changes_requested" ? "changes_requested" : nextState;
           record.agent = agent;
-          record.branch = branch;
+          record.branch = elements.branchInput.value.trim();
           record.reviewer = reviewer;
           record.review = review;
-          record.sha = sha;
+          record.sha = elements.shaInput.value.trim();
           record.reason = reason;
           record.notes = elements.notesInput.value.trim();
           record.updatedAt = now;
@@ -1601,17 +1572,7 @@ EXECUTION RULES
         }
 
         function exportState() {
-          const exported = {
-            version: 1,
-            tasks: Object.fromEntries(
-              TASKS.map((task) => [
-                task.id,
-                sanitizeTaskRecord(state.tasks[task.id]),
-              ]),
-            ),
-            updatedAt: state.updatedAt,
-          };
-          const blob = new Blob([JSON.stringify(exported, null, 2)], {
+          const blob = new Blob([JSON.stringify(state, null, 2)], {
             type: "application/json",
           });
           const link = document.createElement("a");
@@ -1628,46 +1589,10 @@ EXECUTION RULES
             if (parsed.version !== 1 || !parsed.tasks)
               throw new Error("Unsupported tracker schema");
             const next = Object.fromEntries(
-              TASKS.map((task) => {
-                const imported = parsed.tasks[task.id] || {};
-                if (
-                  imported == null ||
-                  typeof imported !== "object" ||
-                  Array.isArray(imported)
-                )
-                  throw new Error(`Invalid Task ${task.id} record`);
-                if (imported.state != null && !TASK_STATES.has(imported.state))
-                  throw new Error(`Invalid Task ${task.id} state`);
-                if (
-                  imported.review != null &&
-                  !REVIEW_STATES.has(imported.review)
-                )
-                  throw new Error(`Invalid Task ${task.id} review outcome`);
-                for (const field of TASK_TEXT_FIELDS) {
-                  if (
-                    imported[field] != null &&
-                    typeof imported[field] !== "string"
-                  )
-                    throw new Error(`Invalid Task ${task.id} ${field}`);
-                }
-                if (imported.tests != null && !Array.isArray(imported.tests))
-                  throw new Error(`Invalid Task ${task.id} tests`);
-                if (
-                  Array.isArray(imported.tests) &&
-                  imported.tests.some(
-                    (test) =>
-                      !test ||
-                      typeof test !== "object" ||
-                      Array.isArray(test) ||
-                      (test.result != null &&
-                        !normalizeTestResult(test.result)) ||
-                      (test.gating != null &&
-                        typeof test.gating !== "boolean"),
-                  )
-                )
-                  throw new Error(`Invalid Task ${task.id} test evidence`);
-                return [task.id, sanitizeTaskRecord(imported)];
-              }),
+              TASKS.map((task) => [
+                task.id,
+                { ...emptyRecord(), ...(parsed.tasks[task.id] || {}) },
+              ]),
             );
             state = {
               version: 1,
@@ -1675,7 +1600,6 @@ EXECUTION RULES
               updatedAt: new Date().toISOString(),
             };
             saveState();
-            formDirty = false;
             render();
             showToast("Tracker state imported.");
           } catch (error) {
@@ -1698,7 +1622,6 @@ EXECUTION RULES
             // Continue with an in-memory reset if file-origin storage is disabled.
           }
           state = loadState();
-          formDirty = false;
           selectedId = "00";
           history.replaceState(null, "", "#00");
           render();

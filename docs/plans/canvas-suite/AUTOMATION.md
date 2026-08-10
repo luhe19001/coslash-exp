@@ -9,7 +9,7 @@ Browser `localStorage` is only an optional human override. Shared coordination t
 ## Exclusive ownership
 
 - A worker may edit only `task-status/NN.js` and `tasks/NN-*.md` for the task it has atomically claimed.
-- These records live in the absolute shared plan root `/Users/helu/code/product/coslash/docs/plans/canvas-suite`, even when implementation runs in a separate coSlash worktree. This keeps concurrent agent status visible to the one dashboard immediately.
+- These records live in the absolute shared plan root `/Users/helu/code/product/fleetlog-canvas/docs/plans/canvas-suite`, even when implementation runs in a separate coSlash worktree. This keeps concurrent agent status visible to the one dashboard immediately.
 - The master agent owns `STATUS.md`, `REPORTS.md`, `ISSUES.md`, and `DECISIONS.md` and mirrors accepted worker reports there.
 - No agent may edit another task's status or report file.
 - Re-read the sidecar immediately before each update. If its agent or state changed, stop and report a claim conflict.

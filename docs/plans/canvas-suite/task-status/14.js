@@ -2,23 +2,31 @@ window.COSLASH_CANVAS_TASK_STATUS = window.COSLASH_CANVAS_TASK_STATUS || {};
 window.COSLASH_CANVAS_TASK_STATUS["14"] = {
   schemaVersion: 1,
   taskId: "14",
-  state: "in_progress",
+  state: "complete",
   agent: "codex-root-master-task-14",
   branch: "claude/canvas-task-14-atlas-model",
   worktree: "/Users/helu/code/product/coslash-task-14",
   baseSha: "94fe07cad85773683898781ed62cd4f69ae27d75",
-  sha: "",
-  reviewer: "",
-  review: "pending",
+  sha: "a3c85e5de8f4036c157ed320e0b0a3df7b1b6925",
+  reviewer: "codex-root-task-14-review",
+  review: "approved",
   reason:
-    "Master takeover at 2026-08-09T02:17:04Z by explicit operator direction after the prior owner stopped reporting checkpoints. The inherited uncommitted Atlas implementation is preserved in place for review, repair, and verification.",
+    "Independent review fixes and verification are complete at a3c85e5de8f4036c157ed320e0b0a3df7b1b6925; approved locally and ready for dependency-ordered integration.",
   notes:
-    "The prior owner worked from 2026-08-09T01:04:47Z and left substantial uncommitted implementation with a last observed write at 2026-08-09T01:59:21Z. The master is continuing on the same isolated branch/worktree and exact base without discarding that work. Final integration still requires 00/03/05 to be reviewed and merged.",
+    "The takeover preserved and completed the prior owner's work. Base 94fe07c contains Tasks 01/03/05; Task 00 evidence is the accepted Fleetlog result b20c698. The integration branch now contains the locally accepted dependencies through 37b564d, but this Task 14 result remains isolated and unmerged pending review.",
   claimedAt: "2026-08-09T02:17:04Z",
   startedAt: "2026-08-09T02:17:04Z",
-  completedAt: "",
-  updatedAt: "2026-08-09T02:21:37Z",
+  completedAt: "2026-08-09T07:25:00Z",
+  updatedAt: "2026-08-09T07:25:00Z",
   progress: [
+    {
+      at: "2026-08-09T07:25:00Z",
+      state: "complete",
+      summary:
+        "Merged into hlu/canvas-migration as e0ef4d1 on operator instruction. The reviewed result a3c85e5 had been approved but never merged, which left collector/internal/plugins/canvas/atlas/ as a bare doc.go and blocked Tasks 15, 16, 17, and the Atlas half of Task 18.",
+      focus: "Integration",
+      nextAction: "Tasks 15, 16, and 17 are unblocked.",
+    },
     {
       at: "2026-08-09T01:07:30Z",
       summary:
@@ -60,6 +68,47 @@ window.COSLASH_CANVAS_TASK_STATUS["14"] = {
       nextAction:
         "Complete the source/ownership audit, run full collector regression and vet, then verify the result commit and prepare the review handoff.",
     },
+    {
+      at: "2026-08-09T02:24:43Z",
+      state: "review",
+      summary:
+        "Committed the Atlas model/store result at 5159f52. Final repeated package race, full collector race, full vet, gofmt, ancestry, clean-worktree, diff-check, and owned-path audits pass.",
+      filesChanged: ["collector/internal/plugins/canvas/atlas/"],
+      resultSha: "5159f52ee32e400821e42edc6e539645e15c63db",
+      tests: [
+        "go test -race -count=3 ./internal/plugins/canvas/atlas/... (passed)",
+        "go test -race ./... (passed)",
+        "go vet ./... (passed)",
+        "go test -cover ./internal/plugins/canvas/atlas/... (passed; 64.3%)",
+        "gofmt/diff/ancestry/ownership/clean-worktree audits (passed)",
+      ],
+      nextAction:
+        "An independent master reviews result 5159f52, mirrors accepted evidence, and merges it before marking Task 14 complete or enabling Tasks 15/16/17.",
+    },
+    {
+      at: "2026-08-09T04:03:34Z",
+      state: "review",
+      summary:
+        "Independent review found and fixed stale-view trust, mutable run allocation snapshots, unsupported payload bypasses, foreign snapshot reads, legacy project adoption, derived-ID overflow/collisions, and duplicate fixed-pipeline roles. The clean Task 14 branch now points at approved result a3c85e5.",
+      filesChanged: [
+        "collector/internal/plugins/canvas/atlas/boardstore.go",
+        "collector/internal/plugins/canvas/atlas/graph.go",
+        "collector/internal/plugins/canvas/atlas/policy.go",
+        "collector/internal/plugins/canvas/atlas/run.go",
+        "collector/internal/plugins/canvas/atlas/runstore.go",
+        "collector/internal/plugins/canvas/atlas/{graph,migrate,reducer,store}_test.go",
+      ],
+      resultSha: "a3c85e5de8f4036c157ed320e0b0a3df7b1b6925",
+      tests: [
+        "go test -race -count=3 ./internal/plugins/canvas/atlas/... (passed)",
+        "go test -race ./... (passed)",
+        "go vet ./... (passed)",
+        "go test -cover ./internal/plugins/canvas/atlas/... (passed; 65.5%)",
+        "gofmt/diff/ownership/clean-worktree audits (passed)",
+      ],
+      nextAction:
+        "Merge a3c85e5 into hlu/canvas-migration in dependency order, rerun integration gates, and only then mark Task 14 complete.",
+    },
   ],
   tests: [
     {
@@ -74,12 +123,69 @@ window.COSLASH_CANVAS_TASK_STATUS["14"] = {
       evidence: "Three repeated race-enabled runs passed after takeover repairs.",
       at: "2026-08-09T02:21:37Z",
     },
+    {
+      command: "cd collector && go test -race ./...",
+      result: "passed",
+      evidence: "Full collector race regression passed on result 5159f52.",
+      at: "2026-08-09T02:24:43Z",
+    },
+    {
+      command: "cd collector && go vet ./...",
+      result: "passed",
+      evidence: "No findings on result 5159f52.",
+      at: "2026-08-09T02:24:43Z",
+    },
+    {
+      command: "cd collector && go test -cover ./internal/plugins/canvas/atlas/...",
+      result: "passed",
+      evidence: "64.3% statement coverage across 25 top-level tests.",
+      at: "2026-08-09T02:24:43Z",
+    },
+    {
+      command: "cd collector && go test -race -count=3 ./internal/plugins/canvas/atlas/...",
+      result: "passed",
+      evidence: "Repeated final race suite passed on reviewed result a3c85e5.",
+      at: "2026-08-09T04:03:34Z",
+    },
+    {
+      command: "cd collector && go test -race ./... && go vet ./...",
+      result: "passed",
+      evidence: "Full collector race regression and vet passed on reviewed result a3c85e5.",
+      at: "2026-08-09T04:03:34Z",
+    },
+    {
+      command: "cd collector && go test -cover ./internal/plugins/canvas/atlas/...",
+      result: "passed",
+      evidence: "65.5% statement coverage after review regressions.",
+      at: "2026-08-09T04:03:34Z",
+    },
   ],
-  issues: [],
+  issues: [
+    {
+      severity: "P3",
+      status: "documented",
+      summary:
+        "Compound board CAS and transition-validation locks coordinate every Atlas store instance in one collector process, but not two collectors sharing one root.",
+      owner: "master/task-18",
+    },
+  ],
   postImplementation: {
-    remainingWork: [],
-    improvements: [],
-    knownIssues: [],
-    followUps: [],
+    remainingWork: [
+      "Independent master review and dependency-ordered merge into hlu/canvas-migration.",
+      "Mark complete only after the integration result passes proportionate verification.",
+    ],
+    improvements: [
+      "Materialized views are accepted only at the authoritative event-log sequence.",
+      "Reference-counted keyed locks cover all Atlas store instances in one collector and return to zero after use.",
+      "Unknown compatible fields survive normalization at every modeled graph nesting level.",
+    ],
+    knownIssues: [
+      "Two collector processes sharing one Atlas root still require an OS-level compound compare-and-append/CAS primitive; the shipped topology has one collector owner.",
+    ],
+    followUps: [
+      "Task 15 creates controller/orchestration files without modifying Task 14 model/store files.",
+      "Task 16 consumes the v1/v2 graph and committee fixtures.",
+      "Task 17 imports legacy boards/runs using the migration boundary and interrupted-run state.",
+    ],
   },
 };

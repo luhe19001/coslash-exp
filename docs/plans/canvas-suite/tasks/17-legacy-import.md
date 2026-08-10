@@ -14,39 +14,50 @@ This record is the task's pickup lock and current truth. The master changes `rea
 
 ```yaml
 task_id: "17"
-state: untouched # untouched | claimed | in_progress | blocked | review | changes_requested | complete | deferred
-readiness: blocked # blocked | ready
-status_reason: "Waiting for Tasks 08, 11, and 14."
+state: complete # untouched | claimed | in_progress | blocked | review | changes_requested | complete | deferred
+readiness: ready # blocked | ready
+status_reason: "Merged into hlu/canvas-migration as 01077d5; green post-merge on both suites and the production build."
 pickup_condition: "Tasks 08, 11, and 14 are complete and merged into the assigned base SHA."
 agent:
-  id: null
-  runtime: null
-  claimed_at_utc: null
-  started_at_utc: null
-  completed_at_utc: null
-branch: null
-worktree: null
-base_sha: null
-result_sha: null
+  id: claude-worker-task-17
+  runtime: claude-code
+  claimed_at_utc: "2026-08-09T18:06:00Z"
+  started_at_utc: "2026-08-09T18:10:00Z"
+  completed_at_utc: "2026-08-09T23:39:09Z"
+branch: claude/canvas-task-17-legacy-import
+worktree: /Users/helu/code/product/coslash-task-17
+base_sha: cd3110e5da77b8f35d0f3221a7d48e595427014a
+result_sha: d98c4c0ca57a415cf5970049b3416603db3fc9f9
 dependencies:
   required: ["08", "11", "14"]
-  satisfied: []
-blockers: ["08", "11", "14"]
-current_focus: null
-next_action: "Wait for the master to mark all dependencies satisfied."
-last_updated_at_utc: "2026-08-08T18:44:11Z"
-last_updated_by: planning-agent
+  satisfied: ["08", "11", "14"]
+blockers: []
+current_focus: "Merged"
+next_action: "Task 18 can now run its migration acceptance rows."
+last_updated_at_utc: "2026-08-09T23:39:09Z"
+last_updated_by: claude-worker-task-17
 verification:
-  state: not_run # not_run | running | passed | failed | partial
-  commands: []
+  state: passed # not_run | running | passed | failed | partial
+  commands:
+    - "cd collector && gofmt -l ./internal ./cmd && go vet ./... && go test -race ./internal/plugins/canvas/migration/ # 45 tests, race clean"
+    - "cd collector && go test ./internal/plugins/canvas/... # every canvas package green"
+    - "cd frontend && npm test && npm run build # 29 files / 373 tests, build green"
 review:
-  reviewer: null
-  reviewed_at_utc: null
-  outcome: null # approved | changes_requested | rejected
+  reviewer: human operator
+  reviewed_at_utc: "2026-08-09T23:39:09Z"
+  outcome: approved # approved | changes_requested | rejected
 post_implementation:
-  remaining_work: []
-  improvements: []
-  known_issues: []
+  remaining_work:
+    - "Artifact copying. A run's promoted artifacts are referenced by its imported log but the blobs are not copied, so an imported run reports artifacts whose contents are absent. This is the one gap in the run pass that an operator can see."
+    - "An unsaved legacy workflow draft is recognized and journaled but not imported; its destination is a saved board and the browser importer holds no board store. Left rather than half-done, and the journal says so per record."
+    - "No HTTP surface: the importer is a package with no route, so Task 19 decides how an operator triggers it and uploads the export bundle."
+    - "No discovery. The caller supplies LegacyBoard and LegacyRun values; nothing walks a legacy directory, because the legacy backend is not in the reference repository and its on-disk root cannot be inferred from evidence."
+  improvements:
+    - "The exporter and importer duplicate the bundle shape in TypeScript and Go; a single generated definition would remove the drift."
+    - "The run importer writes events.jsonl at a path it computes itself, because the run stores expose no way to place a log. The coupling is asserted by TestAnImportedRunIsReadable, but an exported seam would be better than a tested coupling."
+  known_issues:
+    - "SessionResolver is caller-supplied, so the ambiguity refusal is only as good as the candidate list it receives."
+    - "A remapped run gets a synthetic 1970 timestamp in its identifier: stable and sorted together, but no longer descriptive of when the run happened."
   follow_up_tasks: []
 ```
 
