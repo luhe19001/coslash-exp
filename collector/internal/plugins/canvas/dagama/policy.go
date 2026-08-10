@@ -233,7 +233,10 @@ func assertProjectPath(projectPath string) error {
 // to. A record naming anything else is either corrupt or a cross-canvas
 // reference — an Atlas run's blob reached through a relative path — and either
 // way this run must not attest it.
-const ArtifactBlobPrefix = ".fleetlog/run/artifacts/blobs/"
+const (
+	ArtifactBlobPrefix       = ".coslash/run/artifacts/blobs/"
+	legacyArtifactBlobPrefix = ".fleetlog/run/artifacts/blobs/"
+)
 
 // AssertArtifactReference refuses an artifact record that does not describe this
 // run's own promoted blob.
@@ -248,7 +251,7 @@ func AssertArtifactReference(artifact ArtifactRecord) error {
 		return policyError("artifact.bytes", "the artifact size must be positive")
 	}
 	cleaned := path.Clean(artifact.Path)
-	if cleaned != artifact.Path || !strings.HasPrefix(cleaned, ArtifactBlobPrefix) {
+	if cleaned != artifact.Path || (!strings.HasPrefix(cleaned, ArtifactBlobPrefix) && !strings.HasPrefix(cleaned, legacyArtifactBlobPrefix)) {
 		return policyError("artifact.path", "the artifact path is not this run's promoted blob")
 	}
 	if !ValidComponentID(artifact.Producer.ComponentID) {

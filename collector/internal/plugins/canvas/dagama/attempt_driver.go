@@ -358,11 +358,11 @@ func (driver *NativeAttemptDriver) Cleanup(ctx context.Context, state *RunState)
 }
 
 func attemptOutputDirectory(request AttemptRequest) string {
-	return path.Join(".fleetlog/run/out", string(request.Component), request.SeatID, strconv.Itoa(request.Attempt))
+	return path.Join(".coslash/run/out", string(request.Component), request.SeatID, strconv.Itoa(request.Attempt))
 }
 
 func attemptMetadataDirectory(request AttemptRequest) string {
-	return path.Join(".fleetlog/run/attempts", string(request.Component), strconv.Itoa(request.Instance), request.SeatID, strconv.Itoa(request.Attempt))
+	return path.Join(".coslash/run/attempts", string(request.Component), strconv.Itoa(request.Instance), request.SeatID, strconv.Itoa(request.Attempt))
 }
 
 func captureIndexPath(request AttemptRequest, phase string) string {

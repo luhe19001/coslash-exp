@@ -30,10 +30,9 @@ const (
 	MaxControllerBlobBytes int64 = 8 << 20
 )
 
-// Storage layout inside a run root. The embedded `.fleetlog/run/**` protocol is
-// preserved for parity with the legacy agents.
+// Storage layout inside a run root.
 const (
-	artifactsDirectory = ".fleetlog/run/artifacts"
+	artifactsDirectory = ".coslash/run/artifacts"
 	blobsDirectory     = artifactsDirectory + "/blobs"
 	manifestName       = artifactsDirectory + "/manifest.jsonl"
 )

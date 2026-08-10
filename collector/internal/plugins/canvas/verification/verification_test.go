@@ -229,7 +229,7 @@ func TestCheckLogsAreWrittenPerInstance(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
-	if want := ".fleetlog/run/verify/3/unit.log"; document.Checks[0].LogPath != want {
+	if want := ".coslash/run/verify/3/unit.log"; document.Checks[0].LogPath != want {
 		t.Fatalf("LogPath = %q, want %q", document.Checks[0].LogPath, want)
 	}
 }
@@ -242,7 +242,7 @@ func TestCheckNameIsSanitizedIntoTheLogFilename(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
-	if want := ".fleetlog/run/verify/1/unit_tests_1.0.log"; document.Checks[0].LogPath != want {
+	if want := ".coslash/run/verify/1/unit_tests_1.0.log"; document.Checks[0].LogPath != want {
 		t.Fatalf("LogPath = %q, want %q", document.Checks[0].LogPath, want)
 	}
 }

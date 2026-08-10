@@ -33,7 +33,6 @@ The delivered application remains one React frontend embedded in one guarded Go 
 - A separate Canvas service.
 - Arbitrary-graph Atlas execution.
 - New vendors or ticket/publish providers.
-- Renaming the embedded `.fleetlog/run/**` agent/controller protocol during this migration.
 - Automatic deletion of old data or run roots.
 
 ## Plugin boundary
@@ -53,7 +52,7 @@ Existing coSlash code only:
 - New project boards: `<project>/.coslash/{dagama,atlas}/boards`.
 - New private workflow state: `~/.coslash/{dagama,atlas}/projects`.
 - Canvas workspace state: `~/.coslash/canvas`.
-- New run roots stay beneath coSlash-owned private roots but retain `.fleetlog/run/**` internally for parity.
+- New run roots stay beneath coSlash-owned private roots and use `.coslash/run/**` internally.
 - Legacy data remains untouched and is copied through an idempotent migration journal.
 - Nonterminal legacy runs import as historical `interrupted_migration` runs and never restart automatically.
 

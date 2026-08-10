@@ -13,7 +13,7 @@ import (
 	"github.com/centauri-ai/coslash/collector/internal/plugins/canvas/runfs"
 )
 
-const attemptDirectory = ".fleetlog/run/seats/build/1/out"
+const attemptDirectory = ".coslash/run/seats/build/1/out"
 
 func newStore(t *testing.T) (*Store, string) {
 	t.Helper()
@@ -320,7 +320,7 @@ func TestCandidateRefusesSymlinkedParentDirectory(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(outside, "PLAN.md"), []byte("elsewhere\n"), 0o600); err != nil {
 		t.Fatalf("WriteFile: %v", err)
 	}
-	parent := filepath.Join(root, ".fleetlog", "run", "seats", "build", "1")
+	parent := filepath.Join(root, ".coslash", "run", "seats", "build", "1")
 	if err := os.MkdirAll(parent, 0o700); err != nil {
 		t.Fatalf("MkdirAll: %v", err)
 	}
@@ -410,8 +410,8 @@ func TestReadPromotedRefusesPathsOutsideTheBlobStore(t *testing.T) {
 	refused := []string{
 		"secret.txt",
 		"../secret.txt",
-		".fleetlog/run/artifacts/manifest.jsonl",
-		".fleetlog/run/artifacts/blobs/../../../secret.txt",
+		".coslash/run/artifacts/manifest.jsonl",
+		".coslash/run/artifacts/blobs/../../../secret.txt",
 		"/etc/passwd",
 	}
 	for _, path := range refused {

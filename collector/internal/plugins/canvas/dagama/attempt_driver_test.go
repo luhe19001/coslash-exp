@@ -108,7 +108,7 @@ func TestNativeAttemptDriverBindsCodexSessionBeforeExactExitAndPromotesOutput(t 
 		Component: ComponentPlan, Instance: 1, Attempt: 1, AttemptID: "attempt-plan-1", SeatID: "plan-1",
 		Seat: Seat{Vendor: VendorCodex, Model: "gpt-5.6-sol", Effort: "high", Permission: "workspace-write"}, Prompt: "plan the work",
 	}
-	outputPath := filepath.Join(runRoot, ".fleetlog", "run", "out", "plan", "plan-1", "1", "PLAN.md")
+	outputPath := filepath.Join(runRoot, ".coslash", "run", "out", "plan", "plan-1", "1", "PLAN.md")
 	runner.onRespawn = func() error {
 		if err := os.MkdirAll(filepath.Dir(outputPath), 0o700); err != nil {
 			return err
@@ -139,7 +139,7 @@ func TestNativeAttemptDriverBindsCodexSessionBeforeExactExitAndPromotesOutput(t 
 	if len(result.Artifacts) != 1 || result.Artifacts[0].Name != "PLAN.md" || result.Artifacts[0].Producer.SeatID != "plan-1" {
 		t.Fatalf("artifacts = %#v", result.Artifacts)
 	}
-	metadataPrompt := filepath.Join(runRoot, ".fleetlog", "run", "attempts", "plan", "1", "plan-1", "1", "prompt.md")
+	metadataPrompt := filepath.Join(runRoot, ".coslash", "run", "attempts", "plan", "1", "plan-1", "1", "prompt.md")
 	contents, err := os.ReadFile(metadataPrompt)
 	if err != nil || string(contents) != request.Prompt {
 		t.Fatalf("prompt snapshot = %q, err = %v", contents, err)
@@ -192,7 +192,7 @@ func TestNativeAttemptDriverCapturesBuildRevisionAndPromotesPatch(t *testing.T) 
 		Component: ComponentBuild, Instance: 1, Attempt: 1, AttemptID: "attempt-build-1", SeatID: "build-1",
 		Seat: Seat{Vendor: VendorCodex, Model: "gpt-5.6-sol", Effort: "high", Permission: "workspace-write"}, Prompt: "implement",
 	}
-	outputPath := filepath.Join(runRoot, ".fleetlog", "run", "out", "build", "build-1", "1", "IMPLEMENTATION.md")
+	outputPath := filepath.Join(runRoot, ".coslash", "run", "out", "build", "build-1", "1", "IMPLEMENTATION.md")
 	runner.onRespawn = func() error {
 		if err := os.MkdirAll(filepath.Dir(outputPath), 0o700); err != nil {
 			return err
@@ -213,7 +213,7 @@ func TestNativeAttemptDriverCapturesBuildRevisionAndPromotesPatch(t *testing.T) 
 	if len(result.Artifacts) != 2 || result.Artifacts[0].Name != "IMPLEMENTATION.md" || result.Artifacts[1].Name != "CHANGESET.patch" {
 		t.Fatalf("artifacts = %#v", result.Artifacts)
 	}
-	if status := runGitOutput(t, runRoot, "status", "--porcelain"); status != " M README.md\n?? .fleetlog/\n" {
+	if status := runGitOutput(t, runRoot, "status", "--porcelain"); status != " M README.md\n?? .coslash/\n" {
 		t.Fatalf("capture mutated the run index: %q", status)
 	}
 	if staged := runGitOutput(t, runRoot, "diff", "--cached", "--name-only"); staged != "" {

@@ -536,7 +536,7 @@ func TestRunAppendRejectsUndefinedTransitions(t *testing.T) {
 			name: "artifact outside the blob store",
 			invalid: &ArtifactPromoted{Artifact: ArtifactRecord{
 				ArtifactID: "a1", Kind: "plan", Name: "PLAN.md",
-				Path:   ".fleetlog/run/artifacts/blobs/../../../../atlas/secret.md",
+				Path:   ".coslash/run/artifacts/blobs/../../../../atlas/secret.md",
 				Sha256: strings.Repeat("a", 64), Bytes: 3,
 				Producer: ArtifactProducer{ComponentID: ComponentBuild, Instance: 1},
 			}},

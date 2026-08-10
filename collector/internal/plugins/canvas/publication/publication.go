@@ -34,15 +34,18 @@ const (
 	ItemRunBranch       = "run_branch"
 )
 
-// refusedTreePrefixes never reach a published tree. `.fleetlog` is the control
-// plane; a workflow file is code the target repository executes on push, which
-// is not something an agent gets to introduce through a run.
+// refusedTreePrefixes never reach a published tree. `.coslash` is the active
+// control plane, and `.fleetlog` remains refused for pre-rename run roots; a
+// workflow file is code the target repository executes on push, which is not
+// something an agent gets to introduce through a run.
 var refusedTreePrefixes = []string{
+	".coslash/",
 	".fleetlog/",
 	".github/workflows/",
 }
 
 var refusedTreePaths = map[string]bool{
+	".coslash":  true,
 	".fleetlog": true,
 }
 

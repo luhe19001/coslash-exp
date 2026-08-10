@@ -74,7 +74,7 @@ Never return raw command output, absolute private paths not already user-visible
 - DaGama private: `~/.coslash/dagama/projects`.
 - Atlas private: `~/.coslash/atlas/projects`.
 - Project boards: `<project>/.coslash/{dagama,atlas}/boards`.
-- Run exchange protocol: `<runRoot>/.fleetlog/run/**` until a later migration.
+- Run exchange protocol: `<runRoot>/.coslash/run/**`.
 
 All writes are atomic and revisioned where concurrent browser saves are possible. Paths are canonicalized, scoped, and symlink checked.
 

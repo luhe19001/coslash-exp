@@ -18,7 +18,7 @@ const MaxPatchBytes int64 = 8 << 20
 
 // Pathspec exclusions applied to every capture.
 //
-// The literal forms `:(exclude).DS_Store` and `:(exclude).fleetlog` make
+// The literal forms `:(exclude).DS_Store` and `:(exclude).coslash` make
 // `git add` exit non-zero when the path is gitignored and untracked — the
 // common case for both. The glob forms exclude without that failure mode.
 const (
@@ -26,8 +26,11 @@ const (
 	// Finder touching a directory changes a run's identity and invalidates an
 	// approval nobody edited.
 	ExcludeDSStore = ":(exclude,glob)**/.DS_Store"
-	// ExcludeExchange keeps the control plane out of a published tree.
-	ExcludeExchange = ":(exclude,glob)**/.fleetlog/**"
+	// ExcludeExchange keeps the coSlash control plane out of a published tree.
+	ExcludeExchange = ":(exclude,glob)**/.coslash/**"
+	// ExcludeLegacyExchange protects pre-rename run roots during resume and
+	// inspection. New runs never write this location.
+	ExcludeLegacyExchange = ":(exclude,glob)**/.fleetlog/**"
 )
 
 // FileStatus is git's single-letter change status.
@@ -68,7 +71,7 @@ type CaptureOptions struct {
 	IndexFile string
 	// ExcludeExchangePaths omits the control plane from the snapshot. Review's
 	// mutation guard sets this so a seat writing its own output under
-	// `.fleetlog` does not count as a project-file mutation.
+	// `.coslash` does not count as a project-file mutation.
 	ExcludeExchangePaths bool
 }
 
@@ -100,7 +103,7 @@ func (g *Git) CaptureTreeOID(ctx context.Context, options CaptureOptions) (strin
 	}
 	addArgs := []string{"add", "-A", "--", ExcludeDSStore}
 	if options.ExcludeExchangePaths {
-		addArgs = append(addArgs, ExcludeExchange)
+		addArgs = append(addArgs, ExcludeExchange, ExcludeLegacyExchange)
 	}
 	if _, err := run(addArgs...); err != nil {
 		return "", err
@@ -165,7 +168,7 @@ func (g *Git) CaptureRevision(ctx context.Context, options CaptureRevisionOption
 	}
 	addArgs := []string{"add", "-A", "--", ExcludeDSStore}
 	if options.ExcludeExchangePaths {
-		addArgs = append(addArgs, ExcludeExchange)
+		addArgs = append(addArgs, ExcludeExchange, ExcludeLegacyExchange)
 	}
 	if _, err := run(addArgs...); err != nil {
 		return CapturedRevision{}, err

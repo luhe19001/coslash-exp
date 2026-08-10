@@ -362,6 +362,13 @@ func TestPreflightGates(t *testing.T) {
 		{
 			name: "control plane in the tree",
 			mutate: func(g *fakeGit, _ *Request) {
+				g.treePaths = append(g.treePaths, ".coslash/run/state.json")
+			},
+			failing: ItemNoControlPlane,
+		},
+		{
+			name: "legacy control plane in the tree",
+			mutate: func(g *fakeGit, _ *Request) {
 				g.treePaths = append(g.treePaths, ".fleetlog/run/state.json")
 			},
 			failing: ItemNoControlPlane,

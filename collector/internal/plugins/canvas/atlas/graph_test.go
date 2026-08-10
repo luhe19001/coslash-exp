@@ -427,8 +427,8 @@ func TestSystemPromptUpgradeAndPlaceholders(t *testing.T) {
 
 	applied := ApplySystemPromptPlaceholders(
 		"write {{OUTPUT_NAME}} to {{OUTPUT_PATH}} and json to {{OUTPUT_JSON_PATH}}",
-		".fleetlog/run/PLAN.md", ".fleetlog/run/plan.json", "")
-	want := "write PLAN.md to .fleetlog/run/PLAN.md and json to .fleetlog/run/plan.json"
+		".coslash/run/PLAN.md", ".coslash/run/plan.json", "")
+	want := "write PLAN.md to .coslash/run/PLAN.md and json to .coslash/run/plan.json"
 	if applied != want {
 		t.Fatalf("placeholders = %q, want %q", applied, want)
 	}

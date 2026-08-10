@@ -375,10 +375,10 @@ func TestAssertArtifactReference(t *testing.T) {
 
 	tests := map[string]func(a *ArtifactRecord){
 		"cross-canvas relative path": func(a *ArtifactRecord) {
-			a.Path = ".fleetlog/run/artifacts/blobs/../../../../atlas-run/secret.md"
+			a.Path = ".coslash/run/artifacts/blobs/../../../../atlas-run/secret.md"
 		},
 		"absolute path":          func(a *ArtifactRecord) { a.Path = "/etc/passwd" },
-		"outside the blob store": func(a *ArtifactRecord) { a.Path = ".fleetlog/run/verify/1/unit.log" },
+		"outside the blob store": func(a *ArtifactRecord) { a.Path = ".coslash/run/verify/1/unit.log" },
 		"bad digest":             func(a *ArtifactRecord) { a.Sha256 = "nope" },
 		"zero bytes":             func(a *ArtifactRecord) { a.Bytes = 0 },
 		"unknown producer":       func(a *ArtifactRecord) { a.Producer.ComponentID = "atlas-worker" },

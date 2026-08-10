@@ -25,7 +25,7 @@ const MaxAssembledPromptBytes = 128 << 10
 // instance never share a directory and cannot overwrite one another. That
 // isolation is the whole reason a committee produces attributable results.
 func AttemptOutputDirectory(component ComponentID, seatID string, attempt uint64) string {
-	return path.Join(".fleetlog", "run", "out", string(component), seatID, fmt.Sprint(attempt))
+	return path.Join(".coslash", "run", "out", string(component), seatID, fmt.Sprint(attempt))
 }
 
 // PromptInput is everything one turn is assembled from.
@@ -108,7 +108,7 @@ func ComposePrompt(input PromptInput) (string, error) {
 			input.SeatID, committee.ComponentID, input.Instance)
 	}
 	fmt.Fprintf(&builder,
-		"Write your required output to `%s`. Completion without it is `missing_output`; do not edit .fleetlog outside `%s`.\n",
+		"Write your required output to `%s`. Completion without it is `missing_output`; do not edit .coslash outside `%s`.\n",
 		primaryPath, directory)
 	if jsonPath != "" {
 		fmt.Fprintf(&builder, "Write the typed JSON verdict to `%s`.\n", jsonPath)

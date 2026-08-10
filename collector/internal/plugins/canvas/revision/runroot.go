@@ -6,10 +6,12 @@ import (
 	"path/filepath"
 )
 
-// ExchangeDirectory is the control-plane directory inside a run root. The
-// embedded `.fleetlog/run/**` protocol is preserved verbatim for parity with
-// the legacy agents; renaming it is explicitly out of scope for this migration.
-const ExchangeDirectory = ".fleetlog"
+// ExchangeDirectory is the control-plane directory inside a run root.
+const ExchangeDirectory = ".coslash"
+
+// LegacyExchangeDirectory is retained only while inspecting a run created by
+// the Fleetlog-era protocol. New coSlash runs never create it.
+const LegacyExchangeDirectory = ".fleetlog"
 
 // RunRoot is where a run's agents work.
 type RunRoot struct {

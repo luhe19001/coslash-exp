@@ -341,7 +341,7 @@ func Run(ctx context.Context, options RunOptions) (Document, error) {
 	}
 
 	startedAt := now().UTC()
-	logDirectory := path.Join(".fleetlog", "run", "verify", strconv.Itoa(options.Instance))
+	logDirectory := path.Join(".coslash", "run", "verify", strconv.Itoa(options.Instance))
 	if err := options.Scope.MkdirAll(ctx, logDirectory); err != nil {
 		return Document{}, newError(CodeRunNotReady, "the verification log directory could not be created").
 			withDetail(err.Error()).withCause(err)

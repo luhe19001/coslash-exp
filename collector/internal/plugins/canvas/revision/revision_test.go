@@ -561,7 +561,8 @@ func TestCaptureExcludesFinderMetadataAndOptionallyTheControlPlane(t *testing.T)
 
 	// A control-plane write is a mutation for an ordinary capture but not for
 	// the review guard, which excludes the exchange directory.
-	writeFile(t, filepath.Join(runRoot, ".fleetlog", "run", "note.txt"), "seat output\n")
+	writeFile(t, filepath.Join(runRoot, ".coslash", "run", "note.txt"), "seat output\n")
+	writeFile(t, filepath.Join(runRoot, ".fleetlog", "run", "legacy-note.txt"), "legacy seat output\n")
 	guarded, err := git.CaptureTreeOID(t.Context(), CaptureOptions{
 		RunRoot:              runRoot,
 		IndexFile:            filepath.Join(indexDirectory, "c"),
@@ -578,10 +579,16 @@ func TestCaptureExcludesFinderMetadataAndOptionallyTheControlPlane(t *testing.T)
 func TestCaptureRevisionHonorsExchangePathExclusion(t *testing.T) {
 	git, runRoot, ready := newRunRoot(t)
 	indexFile := filepath.Join(realPath(t, t.TempDir()), "capture", "index")
+	if err := os.MkdirAll(filepath.Join(runRoot, ".coslash", "run", "out"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(runRoot, ".coslash", "run", "out", "private.txt"), []byte("private\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
 	if err := os.MkdirAll(filepath.Join(runRoot, ".fleetlog", "run", "out"), 0o700); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(runRoot, ".fleetlog", "run", "out", "private.txt"), []byte("private\n"), 0o600); err != nil {
+	if err := os.WriteFile(filepath.Join(runRoot, ".fleetlog", "run", "out", "legacy-private.txt"), []byte("legacy private\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(runRoot, "visible.txt"), []byte("visible\n"), 0o600); err != nil {
@@ -594,7 +601,7 @@ func TestCaptureRevisionHonorsExchangePathExclusion(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(captured.ChangedFiles) != 1 || captured.ChangedFiles[0].Path != "visible.txt" || strings.Contains(string(captured.Patch), ".fleetlog/run") {
+	if len(captured.ChangedFiles) != 1 || captured.ChangedFiles[0].Path != "visible.txt" || strings.Contains(string(captured.Patch), ".coslash/run") || strings.Contains(string(captured.Patch), ".fleetlog/run") {
 		t.Fatalf("exchange paths leaked into revision: files=%#v patch=%q", captured.ChangedFiles, captured.Patch)
 	}
 }
