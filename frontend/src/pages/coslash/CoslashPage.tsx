@@ -330,6 +330,7 @@ export function CoslashPage() {
       session={{ agent: session.agent, id: session.id }}
       selection={canvasSelection}
       onSelect={setCanvasSelection}
+      onOpen={() => setDestination('canvas')}
     />
   );
 
@@ -394,6 +395,7 @@ export function CoslashPage() {
           {activeDestination != null ? (
             <CanvasDestinationRenderer
               destination={activeDestination}
+              session={canvasSelection}
               sessions={sessions}
               freshnessVersion={sessionsVersion}
               onInspectSession={setCanvasSelection}
